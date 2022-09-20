@@ -73,56 +73,6 @@ impl CPU {
     }
 }
 
-/*
-pub struct Registers {
-    pub x0: u32,
-    pub x1: u32,
-    pub x2: u32,
-    pub x3: u32,
-    pub x4: u32,
-    pub x5: u32,
-    pub x6: u32,
-    pub x7: u32,
-    pub x8: u32,
-    pub x9: u32,
-    pub x10: u32,
-    pub x11: u32,
-    pub x12: u32,
-    pub x13: u32,
-    pub x14: u32,
-    pub x15: u32,
-    pub x16: u32,
-    pub x17: u32,
-    pub x18: u32,
-    pub x19: u32,
-    pub x20: u32,
-    pub x21: u32,
-    pub x22: u32,
-    pub x23: u32,
-    pub x24: u32,
-    pub x25: u32,
-    pub x26: u32,
-    pub x27: u32,
-    pub x28: u32,
-    pub x29: u32,
-    pub x30: u32,
-    pub x31: u32,
-}
-
-impl Registers {
-    pub fn new() -> Self {
-        Registers { x0: 0, x1: 0, x2: 0, x3: 0,
-                    x4: 0, x5: 0, x6: 0, x7: 0,
-                    x8: 0, x9: 0, x10: 0, x11: 0,
-                    x12: 0, x13: 0, x14: 0, x15: 0,
-                    x16: 0, x17: 0, x18: 0, x19: 0,
-                    x20: 0, x21: 0, x22: 0, x23: 0,
-                    x24: 0, x25: 0, x26: 0, x27: 0,
-                    x28: 0, x29: 0, x30: 0, x31: 0 }
-    }
-}
-*/
-
 pub struct RAM {
     data: Vec<u32>,
 }
