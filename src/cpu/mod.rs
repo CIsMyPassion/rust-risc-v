@@ -3,14 +3,14 @@ pub mod instructions;
 use instructions::*;
 
 pub struct CPU {
-    registers: [u32; 32],
+    registers: Registers,
     pc: u32,
     ram: RAM,
 }
 
 impl CPU {
     pub fn new(ram_size: u32) -> Self {
-        CPU { registers: [0; 32], pc: 0, ram: RAM::new(ram_size) }
+        CPU { registers: Registers::new(), pc: 0, ram: RAM::new(ram_size) }
     }
 
     pub fn tick(&mut self) {
@@ -54,8 +54,8 @@ impl CPU {
         }
     }
 
-    pub fn registers(&mut self) -> &mut [u32; 32] {
-        &mut self.registers
+    pub fn registers(&mut self) -> &[u32] {
+        self.registers.inspect()
     }
 
     pub fn pc(&mut self) -> &mut u32 {
@@ -84,7 +84,7 @@ impl CPU {
         // extract immediate value
         let immediate_value = Self::extract_immediate_31_12(instruction);
         // store immediate value in destination register
-        self.registers[destination_register as usize] = immediate_value;
+        self.registers.write(destination_register, immediate_value);
         // increment program counter
         self.pc += 4;
     }
@@ -101,7 +101,31 @@ impl CPU {
             self.pc += immediate_value;
         }
         // write program counter to target register
-        self.registers[destination_register as usize] = self.pc;
+        self.registers.write(destination_register, self.pc);
+    }
+}
+
+pub struct Registers {
+    registers: [u32; 32],
+}
+
+impl Registers {
+    pub fn new() -> Self {
+        Registers { registers: [0; 32] }
+    }
+
+    pub fn write(&mut self, register: u8, value: u32) {
+        if register != 0 {
+            self.registers[register as usize] = value;
+        }
+    }
+
+    pub fn read(&self, register: u8) -> u32 {
+        self.registers[register as usize]
+    }
+
+    pub fn inspect(&self) -> &[u32] {
+        &self.registers[0..]
     }
 }
 
