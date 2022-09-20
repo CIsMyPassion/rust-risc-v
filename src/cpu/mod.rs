@@ -15,7 +15,8 @@ impl CPU {
 
     pub fn tick(&mut self) {
         // fetch instruchtion
-        let instruction = self.ram.read(self.pc);
+        let instruction = self.ram.read_word(self.pc);
+        println!("{}", instruction);
 
         // check instruction group
         if Self::check_instruction_group(instruction, LUI) {
@@ -23,7 +24,7 @@ impl CPU {
             self.lui(instruction);
         } else if Self::check_instruction_group(instruction, AUIPC) {
             // auipc
-            todo!("auipc not implemented");
+            self.auipc(instruction);
         } else if Self::check_instruction_group(instruction, JAL) {
             // jal
             todo!("jal not implemented");
@@ -52,9 +53,6 @@ impl CPU {
             // csr
             todo!("csr group not implemented");
         }
-
-        // increase program counter
-        self.pc += 1;
     }
 
     pub fn registers(&mut self) -> &mut [u32; 32] {
@@ -88,11 +86,28 @@ impl CPU {
         let immediate_value = Self::extract_immediate_31_12(instruction);
         // store immediate value in destination register
         self.registers[destination_register as usize] = immediate_value;
+        // increment program counter
+        self.pc += 4;
+    }
+
+    fn auipc(&mut self, instruction: u32) {
+        // extract destination register
+        let destination_register = Self::extract_destination_register(instruction);
+        // extract immediate value
+        let immediate_value = Self::extract_immediate_31_12(instruction);
+        // add immediate value to program counter
+        if immediate_value == 0 {
+            self.pc += 4;
+        } else {
+            self.pc += immediate_value;
+        }
+        // write program counter to target register
+        self.registers[destination_register as usize] = self.pc;
     }
 }
 
 pub struct RAM {
-    data: Vec<u32>,
+    data: Vec<u8>,
 }
 
 // refactor into u8
@@ -101,15 +116,45 @@ impl RAM {
         RAM { data: vec![0; size as usize] }
     }
 
-    pub fn read(&self, address: u32) -> u32 {
+    pub fn read_byte(&self, address: u32) -> u8 {
         self.data[address as usize]
     }
 
-    pub fn write(&mut self, address: u32, value: u32) {
+    pub fn read_word(&self, address: u32) -> u32 {
+        let b0 = (self.data[(address + 0) as usize] as u32) << 24;
+        let b1 = (self.data[(address + 1) as usize] as u32) << 16;
+        let b2 = (self.data[(address + 2) as usize] as u32) << 8;
+        let b3 = (self.data[(address + 3) as usize] as u32) << 0;
+
+        b0 | b1 | b2 | b3
+    }
+
+    pub fn write(&mut self, address: u32, value: u8) {
         self.data[address as usize] = value;
     }
 
-    pub fn inspect(&self, start: u32, length: u32) -> &[u32] {
+    pub fn write_word(&mut self, address: u32, value: u32) {
+        self.data[(address + 0) as usize] = (value >> 24) as u8;
+        self.data[(address + 1) as usize] = (value >> 16) as u8;
+        self.data[(address + 2) as usize] = (value >>  8) as u8;
+        self.data[(address + 3) as usize] = (value >>  0) as u8;
+    }
+
+    pub fn inspect(&self, start: u32, length: u32) -> &[u8] {
         &self.data[start as usize..(start+length) as usize]
+    }
+
+    pub fn inspect_word(&self, start: u32, length: u32) -> Vec<u32> {
+        let mut words = Vec::new();
+        for i in (start..start+(length*4)).step_by(4) {
+            let b0 = (self.data[(i + 0) as usize] as u32) << 24;
+            let b1 = (self.data[(i + 1) as usize] as u32) << 16;
+            let b2 = (self.data[(i + 2) as usize] as u32) << 8;
+            let b3 = (self.data[(i + 3) as usize] as u32) << 0;
+
+            words.push(b0 | b1 | b2 | b3);
+        }
+
+        words
     }
 }
