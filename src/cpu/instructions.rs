@@ -16,3 +16,10 @@ pub fn lui(destination: u8, value: u32) -> u32 {
 
     truncated_value | shifted_destination | LUI
 }
+
+pub fn auipc(destination: u8, value: u32) -> u32 {
+    let truncated_value = value & 0xFFFFF000;
+    let shifted_destination = (destination as u32) << 7;
+
+    truncated_value | shifted_destination | AUIPC
+}

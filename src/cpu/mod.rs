@@ -16,7 +16,6 @@ impl CPU {
     pub fn tick(&mut self) {
         // fetch instruchtion
         let instruction = self.ram.read_word(self.pc);
-        println!("{}", instruction);
 
         // check instruction group
         if Self::check_instruction_group(instruction, LUI) {
@@ -113,7 +112,7 @@ pub struct RAM {
 // refactor into u8
 impl RAM {
     pub fn new(size: u32) -> Self {
-        RAM { data: vec![0; size as usize] }
+        RAM { data: vec![0; (size * 4) as usize] }
     }
 
     pub fn read_byte(&self, address: u32) -> u8 {
