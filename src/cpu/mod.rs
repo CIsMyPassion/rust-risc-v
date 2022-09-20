@@ -17,9 +17,10 @@ impl CPU {
         // fetch instruchtion
         let instruction = self.ram.read(self.pc);
 
+        // check instruction group
         if Self::check_instruction_group(instruction, LUI) {
             // lui
-            todo!("lui not implemented");
+            self.lui(instruction);
         } else if Self::check_instruction_group(instruction, AUIPC) {
             // auipc
             todo!("auipc not implemented");
@@ -70,6 +71,23 @@ impl CPU {
 
     fn check_instruction_group(instruction: u32, group: u32) -> bool {
         instruction & group == group
+    }
+
+    fn extract_destination_register(instruction: u32) -> u8 {
+        ((instruction >> 7) & 0b11111) as u8
+    }
+
+    fn extract_immediate_31_12(instruction: u32) -> u32 {
+        instruction & 0xFFFFF000
+    }
+
+    fn lui(&mut self, instruction: u32) {
+        // extract destination register
+        let destination_register = Self::extract_destination_register(instruction);
+        // extract immediate value
+        let immediate_value = Self::extract_immediate_31_12(instruction);
+        // store immediate value in destination register
+        self.registers[destination_register as usize] = immediate_value;
     }
 }
 
