@@ -78,3 +78,99 @@ fn bne_test() {
     cpu.tick();
     assert_eq!(*cpu.pc(), 0);
 }
+
+#[test]
+fn blt_test() {
+    let mut cpu = CPU::new(16);
+    cpu.registers().write(1, 1);
+    cpu.registers().write(2, (-255 as i32) as u32);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BLT, 2, 1, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BLT, 0, 1, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BLT, 0, 0, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BLT, 0, 1, 0b1111111100100));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
+}
+
+#[test]
+fn bge_test() {
+    let mut cpu = CPU::new(16);
+    cpu.registers().write(1, 1);
+    cpu.registers().write(2, (-255 as i32) as u32);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BGE, 1, 1, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BGE, 1, 0, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BGE, 2, 0, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BGE, 0, 0, 0b1111111100100));
+
+    println!("register2: {}", cpu.registers().read(2));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
+}
+
+#[test]
+fn bltu_test() {
+    let mut cpu = CPU::new(16);
+    cpu.registers().write(1, 1);
+    cpu.registers().write(2, 255);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BLTU, 1, 2, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BLTU, 0, 1, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BLTU, 0, 0, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BLTU, 0, 1, 0b1111111100100));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
+}
+
+#[test]
+fn bgeu_test() {
+    let mut cpu = CPU::new(16);
+    cpu.registers().write(1, 1);
+    cpu.registers().write(2, 255);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BGEU, 1, 1, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BGEU, 1, 0, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BGEU, 0, 2, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BGEU, 0, 0, 0b1111111100100));
+
+    println!("register2: {}", cpu.registers().read(2));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
+}
