@@ -21,26 +21,34 @@ impl InstructionGroup {
     }
 }
 
-pub fn lui(destination: u8, value: u32) -> u32 {
+pub fn lui(rd: u8, value: u32) -> u32 {
     let truncated_value = value & 0xFFFFF000;
-    let shifted_destination = (destination as u32) << 7;
+    let shifted_rd = (rd as u32) << 7;
 
-    truncated_value | shifted_destination | InstructionGroup::LUI as u32
+    truncated_value | shifted_rd | InstructionGroup::LUI as u32
 }
 
-pub fn auipc(destination: u8, value: u32) -> u32 {
+pub fn auipc(rd: u8, value: u32) -> u32 {
     let truncated_value = value & 0xFFFFF000;
-    let shifted_destination = (destination as u32) << 7;
+    let shifted_rd = (rd as u32) << 7;
 
-    truncated_value | shifted_destination | InstructionGroup::AUIPC as u32
+    truncated_value | shifted_rd | InstructionGroup::AUIPC as u32
 }
 
-pub fn jal(destination: u8, value: u32) -> u32 {
-    let shifted_destination = (destination as u32) << 7;
+pub fn jal(rd: u8, value: u32) -> u32 {
+    let shifted_rd = (rd as u32) << 7;
     let imm_10_1  = (value & 0b000000000011111111110) << 20;
     let imm_11    = (value & 0b000000000100000000000) <<  9;
     let imm_19_12 = (value & 0b011111111000000000000) <<  0;
     let imm_20    = (value & 0b100000000000000000000) << 11;
 
-    imm_10_1 | imm_11 | imm_19_12 | imm_20 | shifted_destination | InstructionGroup::JAL as u32
+    imm_10_1 | imm_11 | imm_19_12 | imm_20 | shifted_rd | InstructionGroup::JAL as u32
+}
+
+pub fn jalr(rd: u8, rs1: u8, value: u16) -> u32 {
+    let shifted_rd = (rd as u32) << 7;
+    let shifted_rs1 = (rs1 as u32) << 15;
+    let imm_11_0  = ((value as u32) & 0b111111111111) << 20;
+
+    imm_11_0 | shifted_rs1 | shifted_rd | InstructionGroup::JALR as u32
 }

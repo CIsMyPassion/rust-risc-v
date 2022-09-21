@@ -30,7 +30,7 @@ impl CPU {
             self.jal(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::JALR) {
             // jalr
-            todo!("jalr not implemented")
+            self.jalr(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::BRANCH) {
             // branch
             self.branch(instruction);
@@ -101,6 +101,10 @@ impl CPU {
         imm_4_1 | imm_10_5 | imm_11 | imm_12
     }
 
+    fn extract_immediate_11_0(instruction: u32) -> u16 {
+        ((instruction >> 20) as u16) & 0b111111111111
+    }
+
     fn lui(&mut self, instruction: u32) {
         // extract destination register
         let rd = Self::extract_rd_register(instruction);
@@ -142,6 +146,31 @@ impl CPU {
             let neg = (amount ^ 0b11111111111111111111) + 1;
             self.pc -= neg;
         }
+    }
+
+    fn jalr(&mut self, instruction: u32) {
+        let rd_index = Self::extract_rd_register(instruction);
+        let rs1_index = Self::extract_rs1_register(instruction);
+        let immediate = Self::extract_immediate_11_0(instruction);
+        let mut total_address = self.registers.read(rs1_index);
+
+        println!("write_pc: {}", self.pc + 4);
+        self.registers.write(rd_index, self.pc + 4);
+
+        let sign   = immediate & 0b100000000000;
+        let amount = immediate & 0b011111111111;
+
+        if sign == 0 {
+            total_address += amount as u32;
+        } else {
+            let neg = (amount ^ 0b11111111111) + 1;
+            total_address -= neg as u32;
+        }
+
+        total_address &= 0xFFFFFFFE;
+        println!("total_address: {}", total_address);
+
+        self.pc = total_address;
     }
 
     fn branch(&mut self, instruction: u32) {
