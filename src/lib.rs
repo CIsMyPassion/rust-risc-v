@@ -58,8 +58,8 @@ impl CPU {
         self.registers.inspect()
     }
 
-    pub fn pc(&mut self) -> &mut u32 {
-        &mut self.pc
+    pub fn pc(&mut self) -> &u32 {
+        &self.pc
     }
 
     pub fn ram(&mut self) -> &mut RAM {
