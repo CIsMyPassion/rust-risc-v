@@ -32,7 +32,7 @@ impl CPU {
             todo!("jalr not implemented")
         } else if Self::check_instruction_group(instruction, BRANCH) {
             // branch
-            todo!("branch group not implemented");
+            self.branch(instruction);
         } else if Self::check_instruction_group(instruction, LOAD) {
             // load
             todo!("load group not implemented");
@@ -54,8 +54,8 @@ impl CPU {
         }
     }
 
-    pub fn registers(&mut self) -> &[u32] {
-        self.registers.inspect()
+    pub fn registers(&mut self) -> &mut Registers {
+        &mut self.registers
     }
 
     pub fn pc(&mut self) -> &u32 {
@@ -70,28 +70,45 @@ impl CPU {
         instruction & group == group
     }
 
-    fn extract_destination_register(instruction: u32) -> u8 {
+    fn extract_rd_register(instruction: u32) -> u8 {
         ((instruction >> 7) & 0b11111) as u8
+    }
+
+    fn extract_rs1_register(instruction: u32) -> u8 {
+        ((instruction >> 15) & 0b11111) as u8
+    }
+
+    fn extract_rs2_register(instruction: u32) -> u8 {
+        ((instruction >> 20) & 0b11111) as u8
     }
 
     fn extract_immediate_31_12(instruction: u32) -> u32 {
         instruction & 0xFFFFF000
     }
 
+    fn extract_immediate_12_1(instruction: u32) -> u16 {
+        let imm_4_1 =  ((instruction >>  8) as u16) & 0b0000000011110;
+        let imm_10_5 = ((instruction >> 20) as u16) & 0b0011111100000;
+        let imm_11 =   ((instruction <<  4) as u16) & 0b0100000000000;
+        let imm_12 =   ((instruction >> 19) as u16) & 0b1000000000000;
+
+        imm_4_1 | imm_10_5 | imm_11 | imm_12
+    }
+
     fn lui(&mut self, instruction: u32) {
         // extract destination register
-        let destination_register = Self::extract_destination_register(instruction);
+        let rd = Self::extract_rd_register(instruction);
         // extract immediate value
         let immediate_value = Self::extract_immediate_31_12(instruction);
         // store immediate value in destination register
-        self.registers.write(destination_register, immediate_value);
+        self.registers.write(rd, immediate_value);
         // increment program counter
         self.pc += 4;
     }
 
     fn auipc(&mut self, instruction: u32) {
         // extract destination register
-        let destination_register = Self::extract_destination_register(instruction);
+        let rd = Self::extract_rd_register(instruction);
         // extract immediate value
         let immediate_value = Self::extract_immediate_31_12(instruction);
         // add immediate value to program counter
@@ -101,7 +118,53 @@ impl CPU {
             self.pc += immediate_value;
         }
         // write program counter to target register
-        self.registers.write(destination_register, self.pc);
+        self.registers.write(rd, self.pc);
+    }
+
+    fn branch(&mut self, instruction: u32) {
+        let rs1_index = Self::extract_rs1_register(instruction);
+        let rs2_index = Self::extract_rs2_register(instruction);
+        let rs1 = self.registers.read(rs1_index);
+        let rs2 = self.registers.read(rs2_index);
+        let immediate = Self::extract_immediate_12_1(instruction);
+        let mut branch = false;
+
+        println!("instruction: {:#b}", instruction);
+        println!("immediate: {:#b}", immediate);
+
+        if Self::check_instruction_group(instruction, BranchType::BEQ as u32) {
+            // beq
+            branch = rs1 == rs2;
+        } else if Self::check_instruction_group(instruction, BranchType::BNE as u32) {
+            // bne
+            branch = rs1 != rs2;
+        } else if Self::check_instruction_group(instruction, BranchType::BLT as u32) {
+            // blt
+            branch = (rs1 as i32) < (rs2 as i32);
+        } else if Self::check_instruction_group(instruction, BranchType::BGE as u32) {
+            // bge
+            branch = (rs1 as i32) >= (rs2 as i32);
+        } else if Self::check_instruction_group(instruction, BranchType::BLTU as u32) {
+            // bltu
+            branch = rs1 < rs2;
+        } else if Self::check_instruction_group(instruction, BranchType::BGEU as u32) {
+            // bgeu
+            branch = rs1 >= rs2;
+        }
+
+        if branch {
+            let sign = immediate & 0b1000000000000;
+            let amount = immediate & 0b111111111111;
+
+            if sign == 0 {
+                self.pc += amount as u32;
+            } else {
+                let neg = (amount ^ 0b111111111111) as u32 + 1;
+                self.pc -= neg;
+            }
+        } else {
+            self.pc += 4;
+        }
     }
 }
 

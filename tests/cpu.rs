@@ -10,8 +10,8 @@ fn lui_test() {
     cpu.tick();
     cpu.tick();
     // verify values
-    assert_eq!(cpu.registers()[0], 0);
-    assert_eq!(cpu.registers()[1], 0xFFFFF000);
+    assert_eq!(cpu.registers().read(0), 0);
+    assert_eq!(cpu.registers().read(1), 0xFFFFF000);
     assert_eq!(*cpu.pc(), 8);
 }
 
@@ -27,8 +27,30 @@ fn auipc_test() {
     cpu.tick();
     cpu.tick();
     // verify values
-    assert_eq!(cpu.registers()[0], 0);
-    assert_eq!(cpu.registers()[1], 8);
-    assert_eq!(cpu.registers()[2], 4104);
+    assert_eq!(cpu.registers().read(0), 0);
+    assert_eq!(cpu.registers().read(1), 8);
+    assert_eq!(cpu.registers().read(2), 4104);
     assert_eq!(*cpu.pc(), 4104);
+}
+
+#[test]
+fn beq_test() {
+    let mut cpu = CPU::new(512);
+    cpu.registers().write(1, 1);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 1, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 0b1111111100100));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
 }
