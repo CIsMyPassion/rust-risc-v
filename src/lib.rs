@@ -27,7 +27,7 @@ impl CPU {
             self.auipc(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::JAL) {
             // jal
-            todo!("jal not implemented");
+            self.jal(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::JALR) {
             // jalr
             todo!("jalr not implemented")
@@ -83,6 +83,15 @@ impl CPU {
         instruction & 0xFFFFF000
     }
 
+    fn extract_immediate_20_1(instruction: u32) -> u32 {
+        let imm_10_1  = (instruction >> 20) & 0b000000000011111111110;
+        let imm_11    = (instruction >>  9) & 0b000000000100000000000;
+        let imm_19_12 = (instruction >>  0) & 0b011111111000000000000;
+        let imm_20    = (instruction >> 11) & 0b100000000000000000000;
+
+        imm_10_1 | imm_11 | imm_19_12 | imm_20
+    }
+
     fn extract_immediate_12_1(instruction: u32) -> u16 {
         let imm_4_1 =  ((instruction >>  7) as u16) & 0b0000000011110;
         let imm_10_5 = ((instruction >> 20) as u16) & 0b0011111100000;
@@ -116,6 +125,23 @@ impl CPU {
         }
         // write program counter to target register
         self.registers.write(rd, self.pc);
+    }
+
+    fn jal(&mut self, instruction: u32) {
+        let rd_index = Self::extract_rd_register(instruction);
+        let immediate = Self::extract_immediate_20_1(instruction);
+
+        self.registers.write(rd_index, self.pc + 4);
+
+        let sign   = immediate & 0b100000000000000000000;
+        let amount = immediate & 0b011111111111111111111;
+
+        if sign == 0 {
+            self.pc += amount;
+        } else {
+            let neg = (amount ^ 0b11111111111111111111) + 1;
+            self.pc -= neg;
+        }
     }
 
     fn branch(&mut self, instruction: u32) {

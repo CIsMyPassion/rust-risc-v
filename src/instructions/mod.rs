@@ -34,3 +34,13 @@ pub fn auipc(destination: u8, value: u32) -> u32 {
 
     truncated_value | shifted_destination | InstructionGroup::AUIPC as u32
 }
+
+pub fn jal(destination: u8, value: u32) -> u32 {
+    let shifted_destination = (destination as u32) << 7;
+    let imm_10_1  = (value & 0b000000000011111111110) << 20;
+    let imm_11    = (value & 0b000000000100000000000) <<  9;
+    let imm_19_12 = (value & 0b011111111000000000000) <<  0;
+    let imm_20    = (value & 0b100000000000000000000) << 11;
+
+    imm_10_1 | imm_11 | imm_19_12 | imm_20 | shifted_destination | InstructionGroup::JAL as u32
+}
