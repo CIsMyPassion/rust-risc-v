@@ -35,12 +35,36 @@ fn auipc_test() {
 
 #[test]
 fn beq_test() {
-    let mut cpu = CPU::new(512);
+    let mut cpu = CPU::new(16);
     cpu.registers().write(1, 1);
     cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 8));
     cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 16));
     cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 1, 16));
     cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 0b1111111100100));
+
+    //println!("8 ins: {:#b}", rust_risc_v::instructions::branch(instructions::BranchType::BEQ, 0, 0, 16));
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 8);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 24);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 28);
+
+    cpu.tick();
+    assert_eq!(*cpu.pc(), 0);
+}
+
+#[test]
+fn bne_test() {
+    let mut cpu = CPU::new(16);
+    cpu.registers().write(1, 1);
+    cpu.ram().write_word(0, rust_risc_v::instructions::branch(instructions::BranchType::BNE, 0, 1, 8));
+    cpu.ram().write_word(8, rust_risc_v::instructions::branch(instructions::BranchType::BNE, 0, 1, 16));
+    cpu.ram().write_word(24, rust_risc_v::instructions::branch(instructions::BranchType::BNE, 0, 0, 16));
+    cpu.ram().write_word(28, rust_risc_v::instructions::branch(instructions::BranchType::BNE, 0, 1, 0b1111111100100));
 
     cpu.tick();
     assert_eq!(*cpu.pc(), 8);

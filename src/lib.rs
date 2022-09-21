@@ -18,37 +18,37 @@ impl CPU {
         let instruction = self.ram.read_word(self.pc);
 
         // check instruction group
-        if Self::check_instruction_group(instruction, LUI) {
+        if Self::check_instruction_group(instruction, MASK, LUI) {
             // lui
             self.lui(instruction);
-        } else if Self::check_instruction_group(instruction, AUIPC) {
+        } else if Self::check_instruction_group(instruction, MASK, AUIPC) {
             // auipc
             self.auipc(instruction);
-        } else if Self::check_instruction_group(instruction, JAL) {
+        } else if Self::check_instruction_group(instruction, MASK, JAL) {
             // jal
             todo!("jal not implemented");
-        } else if Self::check_instruction_group(instruction, JALR) {
+        } else if Self::check_instruction_group(instruction, MASK, JALR) {
             // jalr
             todo!("jalr not implemented")
-        } else if Self::check_instruction_group(instruction, BRANCH) {
+        } else if Self::check_instruction_group(instruction, MASK, BRANCH) {
             // branch
             self.branch(instruction);
-        } else if Self::check_instruction_group(instruction, LOAD) {
+        } else if Self::check_instruction_group(instruction, MASK, LOAD) {
             // load
             todo!("load group not implemented");
-        } else if Self::check_instruction_group(instruction, STORE) {
+        } else if Self::check_instruction_group(instruction, MASK, STORE) {
             // store
             todo!("store group not implemented");
-        } else if Self::check_instruction_group(instruction, MATHI) {
+        } else if Self::check_instruction_group(instruction, MASK, MATHI) {
             // math intermediate
             todo!("math intermediate group not implemented");
-        } else if Self::check_instruction_group(instruction, MATH) {
+        } else if Self::check_instruction_group(instruction, MASK, MATH) {
             // math
             todo!("math group not implemented");
-        } else if Self::check_instruction_group(instruction, FENCE) {
+        } else if Self::check_instruction_group(instruction, MASK, FENCE) {
             // fence
             todo!("fence group not implemented");
-        } else if Self::check_instruction_group(instruction, CSR) {
+        } else if Self::check_instruction_group(instruction, MASK, CSR) {
             // csr
             todo!("csr group not implemented");
         }
@@ -66,8 +66,12 @@ impl CPU {
         &mut self.ram
     }
 
-    fn check_instruction_group(instruction: u32, group: u32) -> bool {
-        instruction & group == group
+    fn check_instruction_group(instruction: u32, mask: u32, group: u32) -> bool {
+        let group_mask = instruction & mask;
+        let group_compare = group_mask ^ group;
+        let is_group = group_compare == 0;
+
+        is_group
     }
 
     fn extract_rd_register(instruction: u32) -> u8 {
@@ -87,7 +91,7 @@ impl CPU {
     }
 
     fn extract_immediate_12_1(instruction: u32) -> u16 {
-        let imm_4_1 =  ((instruction >>  8) as u16) & 0b0000000011110;
+        let imm_4_1 =  ((instruction >>  7) as u16) & 0b0000000011110;
         let imm_10_5 = ((instruction >> 20) as u16) & 0b0011111100000;
         let imm_11 =   ((instruction <<  4) as u16) & 0b0100000000000;
         let imm_12 =   ((instruction >> 19) as u16) & 0b1000000000000;
@@ -129,25 +133,22 @@ impl CPU {
         let immediate = Self::extract_immediate_12_1(instruction);
         let mut branch = false;
 
-        println!("instruction: {:#b}", instruction);
-        println!("immediate: {:#b}", immediate);
-
-        if Self::check_instruction_group(instruction, BranchType::BEQ as u32) {
+        if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BEQ as u32) {
             // beq
             branch = rs1 == rs2;
-        } else if Self::check_instruction_group(instruction, BranchType::BNE as u32) {
+        } else if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BNE as u32) {
             // bne
             branch = rs1 != rs2;
-        } else if Self::check_instruction_group(instruction, BranchType::BLT as u32) {
+        } else if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BLT as u32) {
             // blt
             branch = (rs1 as i32) < (rs2 as i32);
-        } else if Self::check_instruction_group(instruction, BranchType::BGE as u32) {
+        } else if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BGE as u32) {
             // bge
             branch = (rs1 as i32) >= (rs2 as i32);
-        } else if Self::check_instruction_group(instruction, BranchType::BLTU as u32) {
+        } else if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BLTU as u32) {
             // bltu
             branch = rs1 < rs2;
-        } else if Self::check_instruction_group(instruction, BranchType::BGEU as u32) {
+        } else if Self::check_instruction_group(instruction, BranchType::MASK as u32, BranchType::BGEU as u32) {
             // bgeu
             branch = rs1 >= rs2;
         }
