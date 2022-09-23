@@ -2,6 +2,7 @@ pub mod instructions;
 
 use instructions::*;
 use instructions::branch::*;
+use instructions::load::LoadType;
 
 pub struct CPU {
     registers: Registers,
@@ -36,7 +37,7 @@ impl CPU {
             self.branch(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::LOAD) {
             // load
-            todo!("load group not implemented");
+            self.load(instruction);
         } else if InstructionGroup::check(instruction, InstructionGroup::STORE) {
             // store
             todo!("store group not implemented");
@@ -154,7 +155,6 @@ impl CPU {
         let immediate = Self::extract_immediate_11_0(instruction);
         let mut total_address = self.registers.read(rs1_index);
 
-        println!("write_pc: {}", self.pc + 4);
         self.registers.write(rd_index, self.pc + 4);
 
         let sign   = immediate & 0b100000000000;
@@ -214,6 +214,46 @@ impl CPU {
         } else {
             self.pc += 4;
         }
+    }
+
+    fn load(&mut self, instruction: u32) {
+        let rd_index = Self::extract_rd_register(instruction);
+        let rs1_index = Self::extract_rs1_register(instruction);
+        let immediate = Self::extract_immediate_11_0(instruction);
+        let mut total_address = self.registers.read(rs1_index);
+
+        let sign   = immediate & 0b100000000000;
+        let amount = immediate & 0b011111111111;
+
+        println!("amount: {}", amount);
+
+        if sign == 0 {
+            total_address += amount as u32;
+        } else {
+            let neg = (amount ^ 0b11111111111) + 1;
+            total_address -= neg as u32;
+        }
+
+        if LoadType::check(instruction, LoadType::LB) {
+            // lb
+            let load = self.ram.read_byte(total_address) as i8;
+            let load_extended = load as i32;
+            println!("total_address: {}", total_address);
+            println!("load: {}", load);
+            println!("load_extended: {}", load_extended);
+            println!("load_extended_u32: {}", load_extended as u32);
+            self.registers.write(rd_index, load_extended as u32);
+
+        } else if LoadType::check(instruction, LoadType::LH) {
+            // lh
+        } else if LoadType::check(instruction, LoadType::LW) {
+            // lw
+        } else if LoadType::check(instruction, LoadType::LBU) {
+            // lbu
+        } else if LoadType::check(instruction, LoadType::LHU) {
+            // lhu
+        }
+
     }
 }
 

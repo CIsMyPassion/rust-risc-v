@@ -1,4 +1,5 @@
 pub mod branch;
+pub mod load;
 
 pub enum InstructionGroup {
     LUI    = 0b0110111,
