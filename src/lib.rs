@@ -240,7 +240,7 @@ impl CPU {
 
         } else if LoadType::check(instruction, LoadType::LH) {
             // lh
-            let load_u16 = self.ram.read_half(total_address) as i16 as i32;
+            let load_u16 = self.ram.read_half(total_address);
             let load_i16 = load_u16 as i16;
             let load_i32 = load_i16 as i32;
             self.registers.write(rd_index, load_i32 as u32);
