@@ -252,8 +252,14 @@ impl CPU {
 
         } else if LoadType::check(instruction, LoadType::LBU) {
             // lbu
+            let load_u8 = self.ram.read_byte(total_address);
+            self.registers.write(rd_index, load_u8 as u32);
+
         } else if LoadType::check(instruction, LoadType::LHU) {
             // lhu
+            let load_u16 = self.ram.read_half(total_address);
+            self.registers.write(rd_index, load_u16 as u32);
+
         }
 
         self.pc += 4;
@@ -313,7 +319,7 @@ impl RAM {
         b0 | b1 | b2 | b3
     }
 
-    pub fn write(&mut self, address: u32, value: u8) {
+    pub fn write_byte(&mut self, address: u32, value: u8) {
         self.data[address as usize] = value;
     }
 

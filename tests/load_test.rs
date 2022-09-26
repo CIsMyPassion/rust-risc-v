@@ -7,8 +7,8 @@ fn load_byte() {
 
     cpu.ram().write_word(0, load(LoadType::LB, 2, 1, 0));
     cpu.ram().write_word(4, load(LoadType::LB, 3, 1, 1));
-    cpu.ram().write(9, 0);
-    cpu.ram().write(10, 129);
+    cpu.ram().write_byte(9, 0);
+    cpu.ram().write_byte(10, 129);
     cpu.registers().write(1, 9);
 
     cpu.tick();
@@ -58,4 +58,46 @@ fn load_word() {
     assert_eq!(cpu.registers().read(2) as i32, 0);
     assert_eq!(cpu.registers().read(3) as i32, 2048);
     assert_eq!(cpu.registers().read(4) as i32, -1);
+}
+
+#[test]
+fn load_byte_u() {
+    let mut cpu = CPU::new(256);
+
+    cpu.ram().write_word(0, load(LoadType::LBU, 2, 1, 0));
+    cpu.ram().write_word(4, load(LoadType::LBU, 3, 1, 1));
+    cpu.ram().write_word(8, load(LoadType::LBU, 4, 1, 2));
+    cpu.ram().write_byte(12, 0);
+    cpu.ram().write_byte(13, 128);
+    cpu.ram().write_byte(14, 255);
+    cpu.registers().write(1, 12);
+
+    cpu.tick();
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.registers().read(2), 0);
+    assert_eq!(cpu.registers().read(3), 128);
+    assert_eq!(cpu.registers().read(4), 255);
+}
+
+#[test]
+fn load_half_u() {
+    let mut cpu = CPU::new(256);
+
+    cpu.ram().write_word(0, load(LoadType::LHU, 2, 1, 0));
+    cpu.ram().write_word(4, load(LoadType::LHU, 3, 1, 2));
+    cpu.ram().write_word(8, load(LoadType::LHU, 4, 1, 4));
+    cpu.ram().write_half(12, 0);
+    cpu.ram().write_half(14, 2048);
+    cpu.ram().write_half(16, 65535);
+    cpu.registers().write(1, 12);
+
+    cpu.tick();
+    cpu.tick();
+    cpu.tick();
+
+    assert_eq!(cpu.registers().read(2), 0);
+    assert_eq!(cpu.registers().read(3), 2048);
+    assert_eq!(cpu.registers().read(4), 65535);
 }
