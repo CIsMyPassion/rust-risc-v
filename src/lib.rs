@@ -168,7 +168,6 @@ impl CPU {
         }
 
         total_address &= 0xFFFFFFFE;
-        println!("total_address: {}", total_address);
 
         self.pc = total_address;
     }
@@ -224,28 +223,28 @@ impl CPU {
 
         let sign   = immediate & 0b100000000000;
         let amount = immediate & 0b011111111111;
-
-        println!("amount: {}", amount);
+        let neg = (amount ^ 0b11111111111) + 1;
 
         if sign == 0 {
             total_address += amount as u32;
         } else {
-            let neg = (amount ^ 0b11111111111) + 1;
             total_address -= neg as u32;
         }
 
         if LoadType::check(instruction, LoadType::LB) {
             // lb
-            let load = self.ram.read_byte(total_address) as i8;
-            let load_extended = load as i32;
-            println!("total_address: {}", total_address);
-            println!("load: {}", load);
-            println!("load_extended: {}", load_extended);
-            println!("load_extended_u32: {}", load_extended as u32);
-            self.registers.write(rd_index, load_extended as u32);
+            let load_u8 = self.ram.read_byte(total_address);
+            let load_i8 = load_u8 as i8;
+            let load_i32 = load_i8 as i32;
+            self.registers.write(rd_index, load_i32 as u32);
 
         } else if LoadType::check(instruction, LoadType::LH) {
             // lh
+            let load_u16 = self.ram.read_half(total_address) as i16 as i32;
+            let load_i16 = load_u16 as i16;
+            let load_i32 = load_i16 as i32;
+            self.registers.write(rd_index, load_i32 as u32);
+
         } else if LoadType::check(instruction, LoadType::LW) {
             // lw
         } else if LoadType::check(instruction, LoadType::LBU) {
@@ -254,6 +253,7 @@ impl CPU {
             // lhu
         }
 
+        self.pc += 4;
     }
 }
 
@@ -285,7 +285,6 @@ pub struct RAM {
     data: Vec<u8>,
 }
 
-// refactor into u8
 impl RAM {
     pub fn new(size: u32) -> Self {
         RAM { data: vec![0; (size * 4) as usize] }
@@ -293,6 +292,13 @@ impl RAM {
 
     pub fn read_byte(&self, address: u32) -> u8 {
         self.data[address as usize]
+    }
+
+    pub fn read_half(&self, address:u32) -> u16 {
+        let b0 = (self.data[(address + 0) as usize] as u16) << 8;
+        let b1 = (self.data[(address + 1) as usize] as u16) << 0;
+
+        b0 | b1
     }
 
     pub fn read_word(&self, address: u32) -> u32 {
@@ -306,6 +312,11 @@ impl RAM {
 
     pub fn write(&mut self, address: u32, value: u8) {
         self.data[address as usize] = value;
+    }
+
+    pub fn write_half(&mut self, address: u32, value: u16) {
+        self.data[(address + 0) as usize] = (value >> 8) as u8;
+        self.data[(address + 1) as usize] = (value >> 0) as u8;
     }
 
     pub fn write_word(&mut self, address: u32, value: u32) {
