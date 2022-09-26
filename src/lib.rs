@@ -247,6 +247,9 @@ impl CPU {
 
         } else if LoadType::check(instruction, LoadType::LW) {
             // lw
+            let load_u32 = self.ram.read_word(total_address);
+            self.registers.write(rd_index, load_u32);
+
         } else if LoadType::check(instruction, LoadType::LBU) {
             // lbu
         } else if LoadType::check(instruction, LoadType::LHU) {
